@@ -1,0 +1,20 @@
+{
+  "name": "queue-order",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "unit": "jest",
+    "lint": "eslint '*.ts' --quiet --fix",
+    "compile": "tsc",
+    "test": "npm run compile && npm run unit"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "esbuild": "^0.14.14",
+    "jose": "^5.1.3"
+  },
+  "devDependencies": {
+  }
+}
