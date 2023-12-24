@@ -1,5 +1,5 @@
 import { Order } from '../../graphql';
-import { Item } from '../../cirro';
+import { Item, VATChangeInfo } from '../../cirro';
 import { axiosClient } from './axios';
 
 export const createOrder = async ({ id, lines, shippingAddress, shippingMethodName, userEmail }: Order) => {
@@ -18,7 +18,7 @@ export const createOrder = async ({ id, lines, shippingAddress, shippingMethodNa
             hs_code,
         })) || [];
 
-    let vat_change_info = {
+    let vat_change_info: VATChangeInfo = {
         ioss_number: '',
         shipper_vat: '',
         shipper_eori: '',
