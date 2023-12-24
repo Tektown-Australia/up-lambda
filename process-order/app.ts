@@ -10,6 +10,4 @@ export const handler: SQSHandler = async (event) => {
     if (record.messageId === ORDER_CREATED) {
         await createOrder(JSON.parse(record.body).order);
     }
-
-    return new Response('succeed ', { headers: { 'Content-Type': 'application/json' } });
 };

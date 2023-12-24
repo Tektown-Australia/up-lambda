@@ -16,6 +16,5 @@
     "esbuild": "^0.14.14"
   },
   "devDependencies": {
-    "@types/uuid": "^9.0.7"
   }
 }
