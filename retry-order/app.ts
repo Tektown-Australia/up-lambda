@@ -4,8 +4,8 @@ import * as AWS from 'aws-sdk';
 const lambda = new AWS.Lambda();
 const s3 = new AWS.S3();
 
-const BUCKET_NAME = 'your-s3-bucket-name'; // Replace with your bucket name
-const PROCESS_ORDER_FUNCTION = 'ProcessOrderFunction';
+const BUCKET_NAME = process.env.BUCKET_NAME as string;
+const PROCESS_ORDER_FUNCTION = process.env.PROCESS_ORDER_FUNCTION as string;
 
 export const handler: SQSHandler = async (event) => {
   const messageBody = JSON.stringify(event);

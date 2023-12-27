@@ -41,8 +41,6 @@ Resources:
   ProcessOrderFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      Layers:
-        - !Ref MyLambdaLayer
       CodeUri: process-order/
       Handler: app.handler
       Runtime: nodejs20.x
@@ -56,6 +54,24 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - app.ts
+  RetryOrderFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: retry-order/
+      Handler: app.handler
+      Runtime: nodejs20.x
+      Architectures:
+        - x86_64
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - app.ts
+        External:
+          - aws-sdk
   ApplicationResourceGroup:
     Type: AWS::ResourceGroups::Group
     Properties:
