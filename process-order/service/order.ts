@@ -1,12 +1,13 @@
 import { Order } from '../../graphql';
 import { Item, VATChangeInfo } from '../../cirro';
 import { axiosClient } from './axios';
+import { isCountryInEU } from './utils';
 
 export const createOrder = async ({ id, lines, shippingAddress, shippingMethodName, userEmail }: Order) => {
   const { country, countryArea, city, streetAddress1, streetAddress2, postalCode, firstName, lastName, phone } =
     shippingAddress || {};
   let hs_code = 3923290000;
-  if (country?.country == 'EU') {
+  if (country?.country && isCountryInEU(country.country)) {
     hs_code = 3923210000;
   }
   const items: Item[] =
@@ -30,7 +31,7 @@ export const createOrder = async ({ id, lines, shippingAddress, shippingMethodNa
     recipient_eori_country: '',
   };
 
-  if (country?.country === 'UK') {
+  if (country?.code === 'UK') {
     vat_change_info = {
       ...vat_change_info,
       shipper_vat: 'GB421663612',
@@ -38,7 +39,7 @@ export const createOrder = async ({ id, lines, shippingAddress, shippingMethodNa
       shipper_company_name: 'Envirolution Pty Ltd',
     };
   }
-  if (country?.country === 'EU') {
+  if (country?.country && isCountryInEU(country.country)) {
     vat_change_info = {
       ...vat_change_info,
       shipper_vat: 'DE361260056',
@@ -51,8 +52,7 @@ export const createOrder = async ({ id, lines, shippingAddress, shippingMethodNa
     reference_no: id,
     // check
     shipping_method: shippingMethodName,
-    // check
-    // warehouse_code: order.availableCollectionPoints,
+    warehouse_code: country?.code,
     country_code: country?.code,
     province: countryArea,
     city,
