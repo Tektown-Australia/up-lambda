@@ -70,6 +70,5 @@ export const deleteMessageFromSQS = async (receiptHandle: string) => {
     await sqsClient.send(command);
   } catch (error) {
     console.error('Error deleting message:', error);
-    throw error;
   }
 };
