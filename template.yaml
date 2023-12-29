@@ -71,7 +71,9 @@ Resources:
         EntryPoints:
           - app.ts
         External:
-          - aws-sdk
+          - "@aws-sdk/client-sqs"
+          - "@aws-sdk/client-lambda"
+          - "@aws-sdk/client-s3"
   ApplicationResourceGroup:
     Type: AWS::ResourceGroups::Group
     Properties:
