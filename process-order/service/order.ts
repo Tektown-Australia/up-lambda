@@ -3,60 +3,35 @@ import { Item, VATChangeInfo } from '../../cirro';
 import { axiosClient } from './axios';
 import { isCountryInEU } from './utils';
 
+const DEFAULT_HS_CODE = 3923290000;
+const EU_HS_CODE = 3923210000;
+const ENVIROLUTION_COMPANY_NAME = 'Envirolution Pty Ltd';
+
 interface OrderCreatedResponse {
   ask: string;
   message: string;
   order_code: string;
 }
-export const createOrder = async ({ id, lines, shippingAddress, shippingMethodName, userEmail }: Order) => {
+
+export const createOrder = async (order: Order) => {
+  const { id, lines, shippingAddress, shippingMethodName, userEmail } = order;
   const { country, countryArea, city, streetAddress1, streetAddress2, postalCode, firstName, lastName, phone } =
     shippingAddress || {};
-  let hs_code = 3923290000;
-  if (country?.country && isCountryInEU(country.country)) {
-    hs_code = 3923210000;
-  }
+  const hs_code = country?.country && isCountryInEU(country.country) ? EU_HS_CODE : DEFAULT_HS_CODE;
+  const vatChangeInfo = country?.country && createVATChangeInfo(country.country);
+
   const items: Item[] =
     lines?.map((line) => ({
-      // product_sku: line.barcode as string,
       product_sku: line.productSku as string,
       quantity: line.quantity,
       item_id: line.productVariantId as string,
       hs_code,
     })) || [];
 
-  let vat_change_info: VATChangeInfo = {
-    ioss_number: '',
-    shipper_vat: '',
-    shipper_eori: '',
-    shipper_company_name: '',
-    recipient_vat: '',
-    recipient_eori: '',
-    pid_number: '',
-    recipient_vat_country: '',
-    recipient_eori_country: '',
-  };
-
-  if (country?.country === 'United Kingdom') {
-    vat_change_info = {
-      ...vat_change_info,
-      shipper_vat: 'GB421663612',
-      shipper_eori: 'GB421663612000',
-      shipper_company_name: 'Envirolution Pty Ltd',
-    };
-  }
-  if (country?.country && isCountryInEU(country.country)) {
-    vat_change_info = {
-      ...vat_change_info,
-      shipper_vat: 'DE361260056',
-      shipper_company_name: 'Envirolution Pty Ltd',
-    };
-  }
-
   const body = {
-    // Mandatory params
     reference_no: id,
-    // check
     shipping_method: shippingMethodName,
+    // TODO: Implement warehouse code logic once it's included in the testing data.
     warehouse_code: country?.code,
     country_code: country?.code,
     province: countryArea,
@@ -67,9 +42,7 @@ export const createOrder = async ({ id, lines, shippingAddress, shippingMethodNa
     name: firstName,
     last_name: lastName,
     items,
-    vat_change_info,
-
-    // Optional params
+    vat_change_info: vatChangeInfo,
     phone,
     email: userEmail,
   };
@@ -77,9 +50,34 @@ export const createOrder = async ({ id, lines, shippingAddress, shippingMethodNa
   const {
     data: { ask, message, order_code },
   } = await axiosClient.post<OrderCreatedResponse>('/public_open/order/create_order', body);
+
   if (ask === 'Failure') {
-    throw new Error(`order ${id} created failed, error message: ${message}`);
-  } else {
-    console.info(`order ${id} created successful, order code is ${order_code}`);
+    throw new Error(`Order ${id} creation failed: ${message}`);
   }
+  if (ask === 'Success') {
+    console.info(`Order ${id} created successfully. Order code: ${order_code}`);
+  }
+};
+
+const createVATChangeInfo = (country: string): VATChangeInfo => {
+  let vatChangeInfo = {} as VATChangeInfo;
+
+  if (country === 'United Kingdom') {
+    vatChangeInfo = {
+      ...vatChangeInfo,
+      shipper_vat: 'GB421663612',
+      shipper_eori: 'GB421663612000',
+      shipper_company_name: ENVIROLUTION_COMPANY_NAME,
+    };
+  }
+
+  if (isCountryInEU(country)) {
+    vatChangeInfo = {
+      ...vatChangeInfo,
+      shipper_vat: 'DE361260056',
+      shipper_company_name: ENVIROLUTION_COMPANY_NAME,
+    };
+  }
+
+  return vatChangeInfo;
 };
