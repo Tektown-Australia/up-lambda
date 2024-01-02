@@ -4,7 +4,7 @@ const appToken = process.env.GOODCANG_APP_TOKEN as string;
 const appKey = process.env.GOODCANG_APP_KEY as string;
 
 export const axiosClient = axios.create({
-  baseURL: process.env.ThreePL_URL,
+  baseURL: process.env.GOODCANG_URL,
   headers: {
     'Content-Type': 'application/json',
     'Accept-Language': 'en-US',

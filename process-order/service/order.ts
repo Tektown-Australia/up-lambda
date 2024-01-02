@@ -3,6 +3,11 @@ import { Item, VATChangeInfo } from '../../cirro';
 import { axiosClient } from './axios';
 import { isCountryInEU } from './utils';
 
+interface OrderCreatedResponse {
+  ask: string;
+  message: string;
+  order_code: string;
+}
 export const createOrder = async ({ id, lines, shippingAddress, shippingMethodName, userEmail }: Order) => {
   const { country, countryArea, city, streetAddress1, streetAddress2, postalCode, firstName, lastName, phone } =
     shippingAddress || {};
@@ -31,7 +36,7 @@ export const createOrder = async ({ id, lines, shippingAddress, shippingMethodNa
     recipient_eori_country: '',
   };
 
-  if (country?.code === 'UK') {
+  if (country?.country === 'United Kingdom') {
     vat_change_info = {
       ...vat_change_info,
       shipper_vat: 'GB421663612',
@@ -69,5 +74,12 @@ export const createOrder = async ({ id, lines, shippingAddress, shippingMethodNa
     email: userEmail,
   };
 
-  await axiosClient.post('/v1/order/create', body);
+  const {
+    data: { ask, message, order_code },
+  } = await axiosClient.post<OrderCreatedResponse>('/public_open/order/create_order', body);
+  if (ask === 'Failure') {
+    throw new Error(`order ${id} created failed, error message: ${message}`);
+  } else {
+    console.log(`order ${id} created successful, order code is ${order_code}`);
+  }
 };
