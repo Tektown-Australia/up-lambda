@@ -80,6 +80,6 @@ export const createOrder = async ({ id, lines, shippingAddress, shippingMethodNa
   if (ask === 'Failure') {
     throw new Error(`order ${id} created failed, error message: ${message}`);
   } else {
-    console.log(`order ${id} created successful, order code is ${order_code}`);
+    console.info(`order ${id} created successful, order code is ${order_code}`);
   }
 };
