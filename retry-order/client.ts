@@ -1,6 +1,6 @@
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { InvocationType, InvokeCommand, LambdaClient } from '@aws-sdk/client-lambda';
-import { SQSClient, ReceiveMessageCommand, DeleteMessageCommand } from '@aws-sdk/client-sqs';
+import { SQSClient, ReceiveMessageCommand, DeleteMessageCommand, QueueAttributeName } from '@aws-sdk/client-sqs';
 
 const REGION = 'ap-southeast-2';
 
@@ -31,7 +31,10 @@ export const invokeLambdaFunction = async (messageBody: string) => {
   };
 
   const command = new InvokeCommand(params);
-  await lambdaClient.send(command);
+  const response = await lambdaClient.send(command);
+  if (response.FunctionError) {
+    throw new Error(`Lambda invocation failed: ${response.FunctionError} with body ${messageBody}`);
+  }
 };
 
 const sqsClient = new SQSClient({ region: REGION });
@@ -40,6 +43,7 @@ export const receiveMessagesFromSQS = async () => {
   const params = {
     QueueUrl: QUEUE_URL,
     MaxNumberOfMessages: 1,
+    AttributeNames: [QueueAttributeName.All],
   };
 
   const command = new ReceiveMessageCommand(params);
@@ -50,8 +54,12 @@ export const receiveMessagesFromSQS = async () => {
   let receiptHandle;
 
   if (Messages && Messages.length > 0) {
-    const { Body, MessageId, ReceiptHandle } = Messages[0];
-    const message = { messageId: MessageId as string, body: Body as string };
+    const { Body, MessageId, ReceiptHandle, Attributes } = Messages[0];
+    const message = {
+      messageId: MessageId as string,
+      body: Body as string,
+      attributes: { MessageGroupId: Attributes!.MessageGroupId as string },
+    };
     event = { Records: [message] };
     receiptHandle = ReceiptHandle as string;
   }

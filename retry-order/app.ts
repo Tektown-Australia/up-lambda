@@ -8,6 +8,7 @@ interface SQSEvent {
 interface SQSRecord {
   messageId: string;
   body: string;
+  attributes: { MessageGroupId: string };
 }
 
 export const handler: Handler = async () => {
@@ -28,16 +29,7 @@ const retryOrder = async (event: SQSEvent) => {
   try {
     await invokeLambdaFunction(messageBody);
   } catch (error) {
-    await handleInvocationError(event, messageBody, error);
-  }
-};
-
-const handleInvocationError = async (event: SQSEvent, messageBody: string, error: unknown) => {
-  const messageId = event.Records[0].messageId;
-  try {
+    const messageId = event.Records[0].messageId;
     await storeMessageInS3(messageId, messageBody);
-    console.log(`Message ${messageId} stored in S3 after error:`, error);
-  } catch (s3Error) {
-    console.error(`Error storing message ${messageId} in S3:`, s3Error);
   }
 };
