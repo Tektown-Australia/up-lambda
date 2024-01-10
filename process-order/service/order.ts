@@ -22,7 +22,7 @@ export const createOrder = async (order: Order) => {
 
   const items: Item[] =
     lines?.map((line) => ({
-      product_sku: line.productSku as string,
+      product_sku: line.variant?.attributes.find((x) => x.attribute.slug === 'barcode')?.values[0].plainText || '',
       quantity: line.quantity,
       item_id: line.productVariantId as string,
       hs_code,
