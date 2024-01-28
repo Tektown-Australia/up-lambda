@@ -1,5 +1,5 @@
 import { Order } from '../../graphql';
-import { Item, VATChangeInfo } from '../../cirro';
+import { VATChangeInfo } from '../../cirro';
 import { axiosClient } from './axios';
 import { isCountryInEU } from './utils';
 
@@ -14,25 +14,26 @@ interface OrderCreatedResponse {
 }
 
 export const createOrder = async (order: Order) => {
-  const { id, lines, shippingAddress, shippingMethodName, userEmail } = order;
+  const { id, lines, shippingAddress, shippingMethodName, metadata, userEmail } = order;
   const { country, countryArea, city, streetAddress1, streetAddress2, postalCode, firstName, lastName, phone } =
     shippingAddress || {};
   const hs_code = country?.country && isCountryInEU(country.country) ? EU_HS_CODE : DEFAULT_HS_CODE;
   const vatChangeInfo = country?.country && createVATChangeInfo(country.country);
 
-  const items: Item[] =
+  const items =
     lines?.map((line) => ({
-      product_sku: line.variant?.attributes.find((x) => x.attribute.slug === 'barcode')?.values[0].plainText || '',
+      product_sku: line.productSku,
+      barcode: line.variant?.attributes.find((x) => x.attribute.slug === 'barcode')?.values[0]?.plainText || '',
       quantity: line.quantity,
-      item_id: line.productVariantId as string,
       hs_code,
     })) || [];
+
+  const warehouse = metadata.find((m) => m.key == 'warehouseCode');
 
   const body = {
     reference_no: id,
     shipping_method: shippingMethodName,
-    // TODO: Implement warehouse code logic once it's included in the testing data.
-    warehouse_code: country?.code,
+    warehouse_code: warehouse?.value,
     country_code: country?.code,
     province: countryArea,
     city,
