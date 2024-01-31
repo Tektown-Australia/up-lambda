@@ -25,6 +25,7 @@ export const createOrder = async (order: Order) => {
       product_sku: line.productSku,
       barcode: line.variant?.attributes.find((x) => x.attribute.slug === 'barcode')?.values[0]?.plainText || '',
       quantity: line.quantity,
+      item_id: line.id,
       hs_code,
     })) || [];
 
