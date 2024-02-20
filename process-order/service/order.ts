@@ -15,6 +15,7 @@ interface OrderCreatedResponse {
 
 export const createOrder = async (order: Order) => {
   const { id, lines, shippingAddress, shippingMethodName, metadata, userEmail } = order;
+  const reference_no = Buffer.from(id, 'base64').toString('utf-8');
   const { country, countryArea, city, streetAddress1, streetAddress2, postalCode, firstName, lastName, phone } =
     shippingAddress || {};
   const hs_code = country?.country && isCountryInEU(country.country) ? EU_HS_CODE : DEFAULT_HS_CODE;
@@ -25,14 +26,13 @@ export const createOrder = async (order: Order) => {
       product_sku: line.productSku,
       barcode: line.variant?.attributes.find((x) => x.attribute.slug === 'barcode')?.values[0]?.plainText || '',
       quantity: line.quantity,
-      item_id: line.id,
       hs_code,
     })) || [];
 
   const warehouse = metadata.find((m) => m.key == 'warehouseCode');
 
   const body = {
-    reference_no: id,
+    reference_no,
     shipping_method: shippingMethodName,
     warehouse_code: warehouse?.value,
     country_code: country?.code,
@@ -47,6 +47,7 @@ export const createOrder = async (order: Order) => {
     vat_change_info: vatChangeInfo,
     phone,
     email: userEmail,
+    verify: 1,
   };
 
   const {
@@ -57,7 +58,7 @@ export const createOrder = async (order: Order) => {
     throw new Error(`Order ${id} creation failed: ${message}`);
   }
   if (ask === 'Success') {
-    console.info(`Order ${id} created successfully. Order code: ${order_code}`);
+    console.info(`Order ${id} created successfully. Order code: ${order_code}. Reference number: ${reference_no}`);
   }
 };
 
